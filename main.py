@@ -4,6 +4,7 @@ import insightface
 from insightface.app import FaceAnalysis
 from insightface.model_zoo import get_model
 import os
+import pyvirtualcam
 
 MODEL_PATH = os.path.join(os.path.dirname(__file__), 'models', 'inswapper_128.onnx')
 SOURCE_IMG = 'dadajpg.jpg'
@@ -22,7 +23,7 @@ if src is None:
 
 faces = app.get(src)
 if not faces:
-    raise RuntimeError("нет")
+    raise RuntimeError("нет лиц на исходном фото")
 
 source_face = faces[0]
 
@@ -30,15 +31,25 @@ cap = cv2.VideoCapture(0)
 cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
 
-while True:
-    ok, frame = cap.read()
-    if not ok:
-        break
-    for face in app.get(frame):
-        frame = swapper.get(frame, face, source_face, paste_back=True)
-    cv2.imshow('FaceSwap', frame)
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
+with pyvirtualcam.Camera(width=640, height=480, fps=30) as cam:
+    print(f'Используется виртуальная камера: {cam.device}')
+
+    while True:
+        ok, frame = cap.read()
+        if not ok:
+            break
+
+        for face in app.get(frame):
+            frame = swapper.get(frame, face, source_face, paste_back=True)
+
+        frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
+        cam.send(frame_rgb)
+        cam.sleep_until_next_frame()
+
+        cv2.imshow('FaceSwap (Press Q to quit)', frame)
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
 
 cap.release()
 cv2.destroyAllWindows()
