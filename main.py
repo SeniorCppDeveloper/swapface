@@ -16,7 +16,7 @@ from insightface.app import FaceAnalysis
 from insightface.model_zoo import get_model
 
 MODEL_PATH = os.path.join(os.path.dirname(__file__), 'models', 'inswapper_128.onnx')
-SOURCE_IMG = 'dadajpg.jpg'
+SOURCE_IMG = 'my_face.jpg'
 
 if not os.path.exists(MODEL_PATH):
     raise FileNotFoundError(f"нет файла {MODEL_PATH} — скачай inswapper_128.onnx")
